@@ -1,0 +1,25 @@
+{
+  "name": "Vivas CR · Construcción y Reformas",
+  "short_name": "Vivas CR",
+  "description": "Presupuestos de reforma al momento, avalúos, catálogo de obras y comparador de materiales. Amposta y toda Cataluña.",
+  "lang": "es-ES",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F2F6FA",
+  "theme_color": "#063C6B",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    { "src": "assets/logo-mark-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Calcular presupuesto", "url": "./index.html#/presupuesto" },
+    { "name": "Avalúo de inmueble", "url": "./index.html#/avaluo" },
+    { "name": "Comparar materiales", "url": "./index.html#/materiales" },
+    { "name": "Render con IA", "url": "./index.html#/render" }
+  ]
+}

@@ -1,0 +1,12 @@
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Dependencias (el proyecto no usa ninguna, pero por si acaso)
+node_modules/
+
+# Temporales
+*.tmp
+.cache/
+dist/artifact.html
