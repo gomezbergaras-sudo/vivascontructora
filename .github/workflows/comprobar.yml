@@ -1,0 +1,38 @@
+# Comprueba que el código no tiene errores antes de que llegue a la web.
+# No publica nada: de eso se encarga GitHub Pages directamente desde la rama.
+name: Comprobar el código
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Comprobar la sintaxis de todos los módulos
+        run: |
+          node -e "
+            const fs = require('fs');
+            const html = fs.readFileSync('index.html', 'utf8');
+            const src = [...html.matchAll(/<script src=\"([^\"]+)\"><\/script>/g)]
+              .map(m => m[1]).filter(s => !/^https?:/.test(s));
+            let fallos = 0;
+            for (const f of src) {
+              if (!fs.existsSync(f)) { console.error('FALTA el archivo: ' + f); fallos++; continue; }
+              try { new Function(fs.readFileSync(f, 'utf8')); }
+              catch (e) { console.error('SINTAXIS ' + f + ': ' + e.message); fallos++; }
+            }
+            for (const f of ['css/styles.css', 'manifest.webmanifest', 'sw.js']) {
+              if (!fs.existsSync(f)) { console.error('FALTA el archivo: ' + f); fallos++; }
+            }
+            if (fallos) { console.error('\n' + fallos + ' problema(s). La web no funcionaría.'); process.exit(1); }
+            console.log('Correcto: ' + src.length + ' módulos verificados y todas las rutas en su sitio.');
+          "
+
+      - name: Regenerar el archivo único
+        run: node build.js

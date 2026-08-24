@@ -17,16 +17,18 @@ zona de trabajo, horarios, valores, FAQ y logotipo.
 
 ---
 
-**Web publicada:** https://gomezbergaras-sudo.github.io/vivas-cr-app/
+**Web publicada:** https://gomezbergaras-sudo.github.io/vivasconstructora/
 
-## 0. Publicación automática
+## 0. Publicación
 
-Cada vez que se sube un cambio a la rama `main`, GitHub Actions regenera
-`dist/index.html`, comprueba que el paquete no tiene errores de sintaxis y
-publica la web en GitHub Pages. El flujo está en `.github/workflows/pages.yml`.
+La web se sirve directamente desde la rama `main`: en **Settings → Pages**,
+*Source* = **Deploy from a branch**, rama `main`, carpeta `/ (root)`.
+No hace falta ningún proceso de construcción — la app son archivos estáticos.
 
-Para que funcione, en **Settings → Pages** la fuente debe estar puesta en
-**GitHub Actions** (no en "Deploy from a branch").
+Aparte, cada vez que se sube algo, GitHub Actions ejecuta
+`.github/workflows/comprobar.yml`, que verifica que todos los módulos tienen
+sintaxis correcta y que ningún archivo referenciado falta. Si algo se rompe,
+te llega un aviso; la web publicada no depende de ello.
 
 ---
 
