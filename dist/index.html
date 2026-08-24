@@ -614,6 +614,8 @@ window.App.ui = window.App.ui || {};
     settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.2 7.5l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.8 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.2a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.1 1z"/>',
     logout:'<path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H9"/>',
     /* oficios */
+    briefcase:'<rect x="2.5" y="7" width="19" height="13" rx="2.2"/><path d="M9 7V5.2A1.7 1.7 0 0 1 10.7 3.5h2.6A1.7 1.7 0 0 1 15 5.2V7"/><path d="M2.5 12.5h19"/><path d="M10.5 12.5v2h3v-2"/>',
+    'user-check':'<circle cx="9" cy="8" r="3.8"/><path d="M2.5 20.5c0-3.9 3-6.1 6.5-6.1 1.2 0 2.3.2 3.2.7"/><path d="m15 17 2 2 4-4"/>',
     droplet:'<path d="M12 3s6 6.2 6 10.2A6 6 0 0 1 6 13.2C6 9.2 12 3 12 3z"/>',
     bolt:'<path d="M13.5 2 4 13.5h6.5L10 22l9.5-11.5H13z"/>',
     crane:'<path d="M4 21h16"/><path d="M7 21V6l11-2v4"/><path d="M7 6h13"/><path d="M14 6v4.5"/><path d="M11.5 10.5h5V14h-5z"/>',
@@ -974,7 +976,7 @@ window.App = window.App || {};
     es: {
       'nav.home':'Inicio','nav.services':'Servicios','nav.catalog':'Catálogo','nav.materials':'Materiales',
       'nav.profile':'Perfil','nav.quotes':'Presupuestos','nav.valuation':'Avalúos','nav.render':'Render IA',
-      'nav.appointments':'Citas','nav.messages':'Mensajes','nav.admin':'Administración','nav.company':'Empresa',
+      'nav.appointments':'Citas','nav.messages':'Mensajes','nav.admin':'Administración','nav.company':'Empresa','nav.jobs':'Empleo',
       'nav.notifications':'Notificaciones','nav.payments':'Pagos','nav.privacy':'Privacidad y RGPD',
       'common.continue':'Continuar','common.back':'Atrás','common.cancel':'Cancelar','common.save':'Guardar',
       'common.search':'Buscar','common.filter':'Filtrar','common.all':'Todos','common.from':'Desde',
@@ -997,7 +999,7 @@ window.App = window.App || {};
     en: {
       'nav.home':'Home','nav.services':'Services','nav.catalog':'Portfolio','nav.materials':'Materials',
       'nav.profile':'Profile','nav.quotes':'Quotes','nav.valuation':'Valuations','nav.render':'AI Render',
-      'nav.appointments':'Appointments','nav.messages':'Messages','nav.admin':'Admin','nav.company':'Company',
+      'nav.appointments':'Appointments','nav.messages':'Messages','nav.admin':'Admin','nav.company':'Company','nav.jobs':'Jobs',
       'nav.notifications':'Notifications','nav.payments':'Payments','nav.privacy':'Privacy & GDPR',
       'common.continue':'Continue','common.back':'Back','common.cancel':'Cancel','common.save':'Save',
       'common.search':'Search','common.filter':'Filter','common.all':'All','common.from':'From',
@@ -1792,6 +1794,87 @@ window.App = window.App || {};
   A.data.PRODUCTS = PRODUCTS;
   A.data.store_ = (id) => STORES.find((s) => s.id === id);
   A.data.product = (id) => PRODUCTS.find((p) => p.id === id);
+})(window.App);
+
+/* ===== js/data/jobs.js ===== */
+/* ============================================================
+   data/jobs.js — Bolsa de empleo
+   Añade o quita puestos según lo que necesites en cada momento.
+   ============================================================ */
+(function (A) {
+  'use strict';
+
+  /* Oficios por los que se puede presentar candidatura */
+  const TRADES = [
+    { id:'albanil',      name:'Albañil / oficial de 1ª' },
+    { id:'fontanero',    name:'Fontanero' },
+    { id:'electricista', name:'Electricista' },
+    { id:'climatizacion',name:'Instalador de climatización' },
+    { id:'pintor',       name:'Pintor' },
+    { id:'alicatador',   name:'Alicatador / solador' },
+    { id:'pladurista',   name:'Montador de pladur' },
+    { id:'carpintero',   name:'Carpintero' },
+    { id:'encofrador',   name:'Encofrador / ferrallista' },
+    { id:'peon',         name:'Peón de obra' },
+    { id:'jefe-obra',    name:'Jefe de obra / encargado' },
+    { id:'tecnico',      name:'Técnico o administración' },
+    { id:'otro',         name:'Otro (lo explico abajo)' }
+  ];
+
+  const EXPERIENCE = [
+    { id:'sin',    name:'Sin experiencia, con ganas de aprender' },
+    { id:'1-3',    name:'Entre 1 y 3 años' },
+    { id:'3-8',    name:'Entre 3 y 8 años' },
+    { id:'8-15',   name:'Entre 8 y 15 años' },
+    { id:'15+',    name:'Más de 15 años' }
+  ];
+
+  const CONTRACT = [
+    { id:'nomina',    name:'Contrato por cuenta ajena' },
+    { id:'autonomo',  name:'Autónomo / subcontrata' },
+    { id:'cualquiera',name:'Me da igual, lo que haya' }
+  ];
+
+  const AVAILABILITY = [
+    { id:'inmediata', name:'Inmediata' },
+    { id:'15dias',    name:'En 15 días' },
+    { id:'1mes',      name:'En un mes' },
+    { id:'consultar', name:'A consultar' }
+  ];
+
+  /* Lo que ofreces a quien entra a trabajar contigo.
+     REVISA ESTAS CUATRO PROMESAS: aparecen en tu web y te comprometen. */
+  const PERKS = [
+    { icon:'euro',     t:'Pago puntual',   d:'Todos los días 1' },
+    { icon:'pin',      t:'Obras cercanas', d:'Sin dormir fuera' },
+    { icon:'shield',   t:'Alta y PRL',     d:'Todo en regla' },
+    { icon:'trending', t:'Continuidad',    d:'Trabajo estable' }
+  ];
+
+  /* Texto de presentación de la bolsa de empleo */
+  const PITCH = 'Buscamos gente de oficio que trabaje bien y cumpla los plazos. ' +
+    'Si eres de los que dejan la obra limpia y avisan cuando algo no va, queremos conocerte.';
+
+  /* ------------------------------------------------------------
+     OFERTAS ABIERTAS — deja el array vacío si ahora mismo no
+     buscas a nadie: el formulario de candidatura espontánea sigue
+     funcionando igual.
+
+     { id, title, trade, place, contract, schedule, salary,
+       requirements:[], offer:[], open:true }
+     ------------------------------------------------------------ */
+  const VACANCIES = [];
+
+  A.data = A.data || {};
+  A.data.TRADES = TRADES;
+  A.data.EXPERIENCE = EXPERIENCE;
+  A.data.CONTRACT = CONTRACT;
+  A.data.AVAILABILITY = AVAILABILITY;
+  A.data.VACANCIES = VACANCIES;
+  A.data.JOB_PERKS = PERKS;
+  A.data.JOB_PITCH = PITCH;
+  A.data.trade = (id) => TRADES.find((t) => t.id === id);
+  A.data.vacancy = (id) => VACANCIES.find((v) => v.id === id);
 })(window.App);
 
 /* ===== js/engine.js ===== */
@@ -3298,7 +3381,8 @@ window.App = window.App || {};
     { href:'#/catalogo',    key:'nav.catalog' },
     { href:'#/materiales',  key:'nav.materials' },
     { href:'#/render',      key:'nav.render' },
-    { href:'#/empresa',     key:'nav.company' }
+    { href:'#/empresa',     key:'nav.company' },
+    { href:'#/empleo',      key:'nav.jobs' }
   ];
 
   function updateNav(path) {
@@ -3382,6 +3466,7 @@ window.App = window.App || {};
       ${item('#/perfil', 'user', A.t('nav.profile'))}
       <div class="drawer-sec">Empresa</div>
       ${item('#/empresa', 'building', A.t('nav.company'))}
+      ${item('#/empleo', 'briefcase', 'Trabaja con nosotros')}
       ${item('#/catalogo', 'image', A.t('nav.catalog'))}
       ${item('#/privacidad', 'lock', A.t('nav.privacy'))}
       ${A.auth.isAdmin() ? `<div class="drawer-sec">Gestión</div>${item('#/admin', 'chart', A.t('nav.admin'))}` : ''}
@@ -3793,6 +3878,18 @@ window.App = window.App || {};
           <td style="font-weight:600">${A.esc(a.region)}</td>
           <td class="muted">${A.esc(a.provs.join(', '))}</td>
           <td><span class="badge badge-green">${A.esc(a.resp)}</span></td></tr>`).join('')}</tbody></table>
+      </div>
+
+      <div class="card card-p" style="margin-top:16px;border-color:var(--accent)">
+        <div class="between wrap" style="gap:12px">
+          <div class="row" style="gap:12px;align-items:flex-start;min-width:0">
+            <span style="color:var(--accent);flex:none">${A.icon('briefcase', 22)}</span>
+            <div><strong style="font-size:15px">¿Eres del oficio?</strong>
+              <p class="small muted" style="margin-top:3px">Buscamos gente que trabaje bien y cumpla los plazos.
+              Déjanos tu currículum y te tenemos en cuenta en la próxima obra.</p></div>
+          </div>
+          <a class="btn" href="#/empleo">Trabaja con nosotros</a>
+        </div>
       </div>
 
       <div class="sec-head"><div class="sec-title">Preguntas frecuentes</div></div>
@@ -5508,7 +5605,8 @@ window.App = window.App || {};
         ${[['file-text', 'Mis presupuestos', '#/presupuestos'], ['building', 'Mis avalúos', '#/avaluos'],
            ['sparkles', 'Mis renders', '#/renders'], ['calendar', 'Mis citas', '#/citas'],
            ['chat', 'Mensajes', '#/mensajes'], ['card', 'Pagos', '#/pagos'],
-           ['cart', 'Cesta de materiales', '#/cesta'], ['lock', 'Privacidad y RGPD', '#/privacidad']]
+           ['cart', 'Cesta de materiales', '#/cesta'], ['briefcase', 'Trabaja con nosotros', '#/empleo'],
+           ['lock', 'Privacidad y RGPD', '#/privacidad']]
           .map(([ic, l, h]) => `<a class="card card-hover card-p row" href="${h}" style="gap:11px;padding:14px">
             <span style="color:var(--primary)">${A.icon(ic, 19)}</span>
             <span style="font-weight:600;font-size:14px;flex:1">${l}</span>
@@ -5832,6 +5930,7 @@ window.App = window.App || {};
       ['Destinatarios', 'Industriales colaboradores estrictamente necesarios para ejecutar la obra, proveedor de alojamiento en la UE, pasarela de pago certificada, asesoría fiscal y administraciones públicas cuando la ley lo exija. No se realizan transferencias internacionales fuera del EEE.'],
       ['Tus derechos', 'Acceso, rectificación, supresión, limitación, portabilidad y oposición. Puedes ejercerlos desde tu perfil (descargar o borrar tus datos) o escribiendo al DPO. También puedes reclamar ante la AEPD (www.aepd.es).'],
       ['Seguridad', 'Cifrado en tránsito (TLS 1.3) y en reposo, control de acceso por roles, registro de accesos y copias de seguridad diarias. Las contraseñas se almacenan con funciones de derivación seguras, nunca en claro.'],
+      ['Candidaturas de empleo', 'Si nos envías tu currículum tratamos tus datos identificativos, de contacto y de trayectoria profesional con la única finalidad de valorar tu candidatura, sobre la base de tu consentimiento y de medidas precontractuales. Conservamos el currículum 12 meses y después lo eliminamos, salvo que nos pidas retirarlo antes escribiendo al DPO. No lo cedemos a terceros ni lo usamos para ninguna otra finalidad.'],
       ['Cookies y almacenamiento local', 'La aplicación usa almacenamiento local del dispositivo para recordar tu sesión, tus preferencias y los borradores de presupuesto. No se emplean cookies publicitarias ni de seguimiento de terceros.']
     ].map(([t, c]) => `<div class="card card-p" style="margin-bottom:10px">
       <strong style="font-size:14.5px">${t}</strong>
@@ -5842,6 +5941,352 @@ window.App = window.App || {};
       <a class="btn btn-ghost btn-sm" href="tel:${A.data.COMPANY.phone.replace(/\s/g,'')}">${A.icon('phone', 15)} ${A.esc(A.data.COMPANY.phone)}</a>
     </div>
   </div>`, { title:'Privacidad' });
+})(window.App);
+
+/* ===== js/views/jobs.js ===== */
+/* ============================================================
+   views/jobs.js — Trabaja con nosotros: ofertas y candidaturas
+   ============================================================ */
+(function (A) {
+  'use strict';
+
+  const MAX_MB = 5;
+  const MAX_LOCAL_MB = 1;   // sin Supabase el archivo se guarda en el dispositivo
+  const TYPES = {
+    'application/pdf':'PDF',
+    'application/msword':'DOC',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document':'DOCX',
+    'image/jpeg':'JPG', 'image/png':'PNG'
+  };
+
+  let F = null;
+  function init(vacancyId) {
+    F = F || { trade:'', vacancy:'', name:'', email:'', phone:'', city:'', experience:'',
+      contract:'', availability:'', licence:false, ownVehicle:false, message:'',
+      file:null, consent:false, sent:null };
+    if (vacancyId) {
+      const v = A.data.vacancy(vacancyId);
+      if (v) { F.vacancy = v.id; F.trade = v.trade || F.trade; }
+    }
+    return F;
+  }
+
+  /* ---------------- Vista principal ---------------- */
+  A.route('/empleo', async (p, qs) => {
+    init(qs.oferta);
+    A.onMount(bind);
+    const C = A.data.COMPANY;
+    const open = A.data.VACANCIES.filter((v) => v.open !== false);
+
+    if (F.sent) return confirmacion();
+
+    return `<div class="container" style="padding-top:16px;max-width:840px">
+
+      <div class="card" style="overflow:hidden;margin-bottom:16px">
+        <div style="background:linear-gradient(150deg,var(--navy-800),var(--navy-600));padding:22px 20px;color:#fff">
+          <div class="row" style="gap:12px;margin-bottom:12px">
+            <img src="${A.brand.mark256}" alt="" style="width:48px;height:48px;object-fit:contain;flex:none">
+            <div>
+              <div class="brand-name" style="color:#fff;font-size:21px">Trabaja con nosotros</div>
+              <div class="small" style="color:rgba(255,255,255,.6);letter-spacing:.13em;text-transform:uppercase;font-weight:600;font-size:10px">${A.esc(C.name)} · Bolsa de empleo</div>
+            </div>
+          </div>
+          <p style="color:rgba(255,255,255,.82);font-size:14.5px;max-width:56ch">${A.esc(A.data.JOB_PITCH)}</p>
+        </div>
+        <div class="grid g4" style="padding:14px;gap:10px">
+          ${A.data.JOB_PERKS.map((k) => `<div class="center" style="padding:8px 4px">
+              <div style="color:var(--accent);display:grid;place-items:center;margin-bottom:5px">${A.icon(k.icon, 19)}</div>
+              <div style="font-weight:700;font-size:13px">${A.esc(k.t)}</div>
+              <div class="small muted">${A.esc(k.d)}</div></div>`).join('')}
+        </div>
+      </div>
+
+      ${open.length ? `
+        <div class="sec-head" style="margin-top:0"><div>
+          <div class="sec-title">Ofertas abiertas</div>
+          <div class="sec-sub">${open.length} ${open.length === 1 ? 'puesto' : 'puestos'} ahora mismo</div></div></div>
+        <div class="stack" style="margin-bottom:8px">
+          ${open.map((v) => `<div class="card card-p">
+            <div class="between wrap" style="gap:10px">
+              <div style="min-width:0">
+                <div style="font-weight:700;font-size:15.5px">${A.esc(v.title)}</div>
+                <div class="row wrap small muted" style="gap:12px;margin-top:5px">
+                  <span>${A.icon('pin', 13)} ${A.esc(v.place || 'Cataluña')}</span>
+                  <span>${A.icon('briefcase', 13)} ${A.esc(v.contract || 'A convenir')}</span>
+                  ${v.schedule ? `<span>${A.icon('clock', 13)} ${A.esc(v.schedule)}</span>` : ''}
+                  ${v.salary ? `<span>${A.icon('euro', 13)} ${A.esc(v.salary)}</span>` : ''}
+                </div>
+              </div>
+              <button class="btn btn-sm" data-apply="${v.id}">Me interesa</button>
+            </div>
+            ${(v.requirements || []).length ? `<hr class="divider">
+              <div class="small" style="font-weight:700;margin-bottom:6px">Qué pedimos</div>
+              ${v.requirements.map((r) => `<div class="row" style="gap:8px;align-items:flex-start;margin-bottom:4px">
+                <span style="color:var(--green);flex:none">${A.icon('check', 14)}</span>
+                <span class="small">${A.esc(r)}</span></div>`).join('')}` : ''}
+          </div>`).join('')}
+        </div>` : `
+        <div class="card card-p" style="margin-bottom:14px;background:var(--primary-soft);border-color:var(--primary)">
+          <div class="row" style="gap:11px;align-items:flex-start">
+            <span style="color:var(--primary);flex:none">${A.icon('info', 20)}</span>
+            <div><strong style="font-size:14.5px">Ahora mismo no hay ninguna oferta publicada</strong>
+              <p class="small muted" style="margin-top:4px">Aun así, déjanos tu currículum. Trabajamos por obras y
+              cuando entra uno nuevo tiramos primero de la gente que ya tenemos en la bolsa.</p></div>
+          </div>
+        </div>`}
+
+      <div class="sec-head"><div>
+        <div class="sec-title">Envíanos tu candidatura</div>
+        <div class="sec-sub">Dos minutos. Te contestamos siempre, aunque sea para decirte que no.</div></div></div>
+
+      <div class="card card-p" id="form-empleo">
+        ${F.vacancy ? `<div class="row between" style="background:var(--primary-soft);border-radius:12px;padding:10px 13px;margin-bottom:14px">
+          <span class="small"><strong>Te presentas a:</strong> ${A.esc((A.data.vacancy(F.vacancy) || {}).title || '')}</span>
+          <button class="link small" id="j-clearvac">Quitar</button></div>` : ''}
+
+        <label class="label">¿A qué te dedicas? *</label>
+        <select class="select" id="j-trade">
+          <option value="">Elige tu oficio…</option>
+          ${A.data.TRADES.map((t) => `<option value="${t.id}" ${F.trade === t.id ? 'selected' : ''}>${A.esc(t.name)}</option>`).join('')}
+        </select>
+
+        <div class="gf" style="margin-top:14px">
+          <div class="field"><label class="label">Nombre y apellidos *</label>
+            <input class="input" id="j-name" value="${A.esc(F.name)}" autocomplete="name"></div>
+          <div class="field"><label class="label">Teléfono *</label>
+            <input class="input" id="j-phone" value="${A.esc(F.phone)}" inputmode="tel" placeholder="600 000 000"></div>
+        </div>
+        <div class="gf">
+          <div class="field"><label class="label">Correo electrónico *</label>
+            <input class="input" id="j-email" type="email" value="${A.esc(F.email)}" autocomplete="email"></div>
+          <div class="field"><label class="label">Población donde vives *</label>
+            <input class="input" id="j-city" value="${A.esc(F.city)}" placeholder="Amposta, Tortosa…"></div>
+        </div>
+
+        <div class="gf">
+          <div class="field"><label class="label">Experiencia en el oficio *</label>
+            <select class="select" id="j-exp"><option value="">Elige…</option>
+              ${A.data.EXPERIENCE.map((e) => `<option value="${e.id}" ${F.experience === e.id ? 'selected' : ''}>${A.esc(e.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label class="label">Cómo prefieres trabajar</label>
+            <select class="select" id="j-contract"><option value="">Elige…</option>
+              ${A.data.CONTRACT.map((c) => `<option value="${c.id}" ${F.contract === c.id ? 'selected' : ''}>${A.esc(c.name)}</option>`).join('')}
+            </select></div>
+        </div>
+
+        <div class="field"><label class="label">Cuándo podrías empezar</label>
+          <div class="chips">${A.data.AVAILABILITY.map((a) => `
+            <button class="chip ${F.availability === a.id ? 'sel' : ''}" data-avail="${a.id}">${A.esc(a.name)}</button>`).join('')}</div></div>
+
+        <div class="switchrow">
+          <div><div style="font-weight:600;font-size:14px">Carnet de conducir B</div>
+            <div class="small muted">Nos movemos entre obras a diario.</div></div>
+          <button class="switch ${F.licence ? 'on' : ''}" id="j-licence"></button>
+        </div>
+        <div class="switchrow">
+          <div><div style="font-weight:600;font-size:14px">Vehículo propio</div>
+            <div class="small muted">No es imprescindible, pero suma.</div></div>
+          <button class="switch ${F.ownVehicle ? 'on' : ''}" id="j-vehicle"></button>
+        </div>
+
+        <hr class="divider">
+        <label class="label">Tu currículum</label>
+        <div id="j-drop" class="card-p" style="border:2px dashed var(--border-strong);border-radius:13px;text-align:center;cursor:pointer;padding:22px">
+          ${F.file ? `<div class="row" style="gap:11px;justify-content:center">
+              <span style="color:var(--green)">${A.icon('check-circle', 22)}</span>
+              <div style="text-align:left">
+                <div style="font-weight:700;font-size:14px">${A.esc(F.file.name)}</div>
+                <div class="small muted">${A.esc(F.file.kind)} · ${A.num(F.file.size / 1024, 0)} KB</div>
+              </div></div>
+            <button class="link small" id="j-clearfile" style="margin-top:9px">Cambiar archivo</button>`
+            : `<div class="muted">${A.icon('upload', 30)}</div>
+               <div style="font-weight:700;font-size:14px;margin-top:8px">Toca para adjuntar tu CV</div>
+               <div class="small muted" style="margin-top:3px">PDF, Word, JPG o PNG · hasta ${MAX_MB} MB</div>`}
+        </div>
+        <input type="file" id="j-file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display:none">
+        <div class="hint">Si no tienes el CV a mano, no pasa nada: cuéntanoslo abajo y ya nos lo mandas después.</div>
+
+        <div class="field" style="margin-top:14px"><label class="label">Cuéntanos algo de ti</label>
+          <textarea class="textarea" id="j-message" placeholder="Qué sabes hacer, en qué obras has trabajado, qué buscas…">${A.esc(F.message)}</textarea></div>
+
+        <div class="switchrow">
+          <div><div style="font-weight:600;font-size:14px">Autorizo el tratamiento de mis datos *</div>
+            <div class="small muted">Usaremos tu CV solo para procesos de selección de ${A.esc(C.name)} y lo
+              conservaremos 12 meses. <a class="link" href="#/privacidad">Más información</a></div></div>
+          <button class="switch ${F.consent ? 'on' : ''}" id="j-consent"></button>
+        </div>
+
+        <div id="j-error" class="small" style="color:var(--red);display:none;margin-top:10px"></div>
+
+        <button class="btn btn-accent btn-block btn-lg" id="j-send" style="margin-top:16px">
+          ${A.icon('send', 18)} Enviar candidatura</button>
+
+        <div class="row wrap" style="gap:8px;margin-top:12px;justify-content:center">
+          <a class="btn btn-wa btn-sm" target="_blank" rel="noopener"
+             href="https://wa.me/${C.whatsapp.replace(/[^\d]/g, '')}?text=${encodeURIComponent('Hola, os escribo por la bolsa de empleo de ' + C.name + '.')}">
+            ${A.icon('whatsapp', 15)} Prefiero escribir por WhatsApp</a>
+        </div>
+      </div>
+      <div style="height:26px"></div>
+    </div>`;
+  }, { title:'Trabaja con nosotros' });
+
+  /* ---------------- Confirmación ---------------- */
+  function confirmacion() {
+    const s = F.sent;
+    return `<div class="container" style="padding-top:40px;max-width:560px">
+      <div class="card card-p center" style="padding:34px 22px">
+        <div style="color:var(--green)">${A.icon('check-circle', 52)}</div>
+        <h1 style="font-size:21px;margin-top:14px">Candidatura recibida</h1>
+        <p class="muted" style="margin-top:8px">Gracias, ${A.esc(s.name.split(' ')[0])}. La revisamos y te
+          contestamos en los próximos días, tanto si encaja como si no.</p>
+        <div class="card card-p" style="margin-top:18px;text-align:left;background:var(--surface-2)">
+          <div class="line"><span class="muted">Referencia</span><span class="mono">${A.esc(s.ref)}</span></div>
+          <div class="line"><span class="muted">Oficio</span><span>${A.esc(s.tradeName)}</span></div>
+          <div class="line"><span class="muted">Currículum</span>
+            <span>${s.cv ? A.esc(s.cv) : 'No adjuntado'}</span></div>
+          <div class="line"><span class="muted">Fecha</span><span>${A.dateFmt(new Date().toISOString(), true)}</span></div>
+        </div>
+        ${s.warn ? `<p class="small" style="color:var(--amber-dark);margin-top:12px">${A.esc(s.warn)}</p>` : ''}
+        <div class="row wrap" style="gap:9px;justify-content:center;margin-top:20px">
+          <a class="btn btn-ghost btn-sm" href="#/">Volver al inicio</a>
+          <button class="btn btn-ghost btn-sm" id="j-again">Enviar otra candidatura</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /* ---------------- Eventos ---------------- */
+  function bind() {
+    const again = A.$('#j-again');
+    if (again) return again.addEventListener('click', () => { F = null; init(); A.render(); });
+
+    const set = (id, key) => {
+      const el = A.$('#' + id);
+      if (el) el.addEventListener('input', (e) => { F[key] = e.target.value; });
+    };
+    set('j-name', 'name'); set('j-email', 'email'); set('j-phone', 'phone');
+    set('j-city', 'city'); set('j-message', 'message');
+    const sel = (id, key) => {
+      const el = A.$('#' + id);
+      if (el) el.addEventListener('change', (e) => { F[key] = e.target.value; });
+    };
+    sel('j-trade', 'trade'); sel('j-exp', 'experience'); sel('j-contract', 'contract');
+
+    A.$$('[data-avail]').forEach((b) => b.addEventListener('click', () => {
+      F.availability = b.dataset.avail;
+      A.$$('[data-avail]').forEach((x) => x.classList.toggle('sel', x === b));
+    }));
+    const toggle = (id, key) => {
+      const el = A.$('#' + id);
+      if (el) el.addEventListener('click', () => { F[key] = !F[key]; el.classList.toggle('on', F[key]); });
+    };
+    toggle('j-licence', 'licence'); toggle('j-vehicle', 'ownVehicle'); toggle('j-consent', 'consent');
+
+    A.$$('[data-apply]').forEach((b) => b.addEventListener('click', () => {
+      const v = A.data.vacancy(b.dataset.apply);
+      F.vacancy = v.id; if (v.trade) F.trade = v.trade;
+      A.render();
+      setTimeout(() => { const f = A.$('#form-empleo'); if (f) f.scrollIntoView({ behavior:'smooth', block:'start' }); }, 120);
+    }));
+    const cv = A.$('#j-clearvac');
+    if (cv) cv.addEventListener('click', () => { F.vacancy = ''; A.render(); });
+
+    /* Archivo */
+    const input = A.$('#j-file'), drop = A.$('#j-drop');
+    if (drop) drop.addEventListener('click', () => input.click());
+    if (input) input.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      if (!TYPES[f.type]) { A.toast('Formato no admitido. Envía PDF, Word, JPG o PNG.', 'err'); return; }
+      if (f.size > MAX_MB * 1024 * 1024) { A.toast(`El archivo supera los ${MAX_MB} MB`, 'err'); return; }
+      const fr = new FileReader();
+      fr.onload = () => {
+        F.file = { name:f.name, size:f.size, type:f.type, kind:TYPES[f.type], data:fr.result, blob:f };
+        A.render();
+      };
+      fr.readAsDataURL(f);
+    });
+    const clr = A.$('#j-clearfile');
+    if (clr) clr.addEventListener('click', (e) => { e.stopPropagation(); F.file = null; A.render(); });
+
+    /* Envío */
+    const send = A.$('#j-send');
+    if (send) send.addEventListener('click', () => enviar(send));
+  }
+
+  async function enviar(btn) {
+    const err = [];
+    if (!F.trade) err.push('Elige tu oficio.');
+    if (!A.v.min(F.name, 3)) err.push('Escribe tu nombre y apellidos.');
+    if (!A.v.phone(F.phone)) err.push('El teléfono no parece válido.');
+    if (!A.v.email(F.email)) err.push('El correo no parece válido.');
+    if (!A.v.required(F.city)) err.push('Indica dónde vives.');
+    if (!F.experience) err.push('Indica tu experiencia.');
+    if (!F.consent) err.push('Necesitamos tu autorización para tratar los datos.');
+    const box = A.$('#j-error');
+    if (err.length) { box.style.display = 'block'; box.innerHTML = err.map(A.esc).join('<br>'); return; }
+    box.style.display = 'none';
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Enviando…';
+
+    let cvPath = '', cvData = '', warn = '';
+    try {
+      if (F.file) {
+        if (A.db.mode === 'supabase') {
+          const safe = F.file.name.replace(/[^\w.\-]+/g, '_').slice(-60);
+          const path = `${new Date().getFullYear()}/${A.uid('cv')}-${safe}`;
+          const { error } = await A.db.client.storage.from('curriculums')
+            .upload(path, F.file.blob, { contentType:F.file.type, upsert:false });
+          if (error) throw new Error(error.message);
+          cvPath = path;
+        } else if (F.file.size <= MAX_LOCAL_MB * 1024 * 1024) {
+          cvData = F.file.data;
+        } else {
+          warn = 'Tu currículum era demasiado grande para guardarlo sin conexión. Te lo pediremos al contestarte.';
+        }
+      }
+
+      const n = (await A.db.list('applications')).length + 1;
+      const rec = await A.db.insert('applications', {
+        ref: A.ref('CV', n),
+        name:F.name, email:F.email.toLowerCase(), phone:F.phone, city:F.city,
+        trade:F.trade, trade_name:(A.data.trade(F.trade) || {}).name || F.trade,
+        vacancy:F.vacancy || null, experience:F.experience, contract:F.contract,
+        availability:F.availability, licence:F.licence, own_vehicle:F.ownVehicle,
+        message:F.message, cv_path:cvPath, cv_data:cvData,
+        cv_name:F.file ? F.file.name : '', cv_type:F.file ? F.file.type : '',
+        status:'nueva', consent_version:A.config.gdpr.consentVersion
+      });
+
+      F.sent = { ref:rec.ref, name:F.name, tradeName:rec.trade_name,
+        cv:F.file ? F.file.name : '', warn };
+      A.render();
+      window.scrollTo({ top:0 });
+    } catch (e) {
+      console.error(e);
+      btn.disabled = false;
+      btn.innerHTML = A.icon('send', 18) + ' Enviar candidatura';
+      box.style.display = 'block';
+      box.textContent = 'No hemos podido enviar la candidatura: ' + (e.message || 'error desconocido') +
+        '. Prueba de nuevo o escríbenos por WhatsApp.';
+    }
+  }
+
+  /* ---------------- Descarga del CV (administración) ---------------- */
+  A.jobs = {
+    async cvUrl(rec) {
+      if (rec.cv_data) return rec.cv_data;
+      if (rec.cv_path && A.db.mode === 'supabase') {
+        const { data, error } = await A.db.client.storage.from('curriculums')
+          .createSignedUrl(rec.cv_path, 300);
+        if (error) throw new Error(error.message);
+        return data.signedUrl;
+      }
+      return null;
+    }
+  };
 })(window.App);
 
 /* ===== js/views/admin.js ===== */
@@ -5893,8 +6338,9 @@ window.App = window.App || {};
   }
 
   A.route('/admin', async () => {
-    const [quotes, users, apps, pays, vals] = await Promise.all([
-      A.db.list('quotes'), A.db.list('users'), A.db.list('appointments'), A.db.list('payments'), A.db.list('valuations')
+    const [quotes, users, apps, pays, vals, cvs] = await Promise.all([
+      A.db.list('quotes'), A.db.list('users'), A.db.list('appointments'),
+      A.db.list('payments'), A.db.list('valuations'), A.db.list('applications')
     ]);
 
     const won = quotes.filter((q) => ['aceptado', 'en_obra', 'finalizado'].indexOf(q.status) !== -1);
@@ -5923,6 +6369,20 @@ window.App = window.App || {};
     const STATUS_L = { borrador:'Borrador', enviado:'Enviado', aceptado:'Aceptado', en_obra:'En obra', finalizado:'Finalizado', rechazado:'Rechazado' };
 
     A.onMount(() => {
+      A.$$('[data-cvst]').forEach((sel) => sel.addEventListener('change', async (e) => {
+        await A.db.update('applications', sel.dataset.cvst, { status:e.target.value });
+        A.toast('Candidatura actualizada', 'ok');
+      }));
+      A.$$('[data-cv]').forEach((b) => b.addEventListener('click', async () => {
+        const rec = cvs.find((x) => x.id === b.dataset.cv);
+        b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
+        try {
+          const url = await A.jobs.cvUrl(rec);
+          if (!url) throw new Error('El archivo ya no está disponible');
+          window.open(url, '_blank', 'noopener');
+        } catch (err) { A.toast(err.message, 'err'); }
+        b.disabled = false; b.innerHTML = A.icon('download', 14) + ' Abrir';
+      }));
       A.$$('[data-st]').forEach((s) => s.addEventListener('change', async (e) => {
         await A.db.update('quotes', s.dataset.st, { status:e.target.value });
         A.toast('Estado actualizado', 'ok');
@@ -5974,6 +6434,8 @@ window.App = window.App || {};
         ${kpi(String(users.length), 'Clientes', 'registrados')}
         ${kpi(String(apps.filter((a) => a.status !== 'cancelada').length), 'Citas activas', 'visitas y obra')}
         ${kpi(String(vals.length), 'Avalúos', 'informes emitidos')}
+        ${kpi(String(cvs.filter((c) => c.status === 'nueva').length), 'Candidaturas',
+             cvs.length + ' en total', cvs.some((c) => c.status === 'nueva') ? 'var(--accent)' : '')}
       </div>
 
       <div class="grid g2" style="gap:12px;margin-top:14px">
@@ -6038,6 +6500,37 @@ window.App = window.App || {};
           <p class="small muted" style="margin-top:8px">Edita las tarifas en <code>js/data/services.js</code> o en la tabla <code>services</code> de Supabase.</p>
         </div>
       </div>
+
+      <div class="sec-head"><div><div class="sec-title">Bolsa de empleo</div>
+        <div class="sec-sub">${cvs.length} candidaturas recibidas</div></div>
+        <a class="link" href="#/empleo">Ver el formulario ${A.icon('chev', 14)}</a></div>
+      ${cvs.length ? `<div class="tablewrap">
+        <table><thead><tr>
+          <th>Ref.</th><th>Fecha</th><th>Candidato</th><th>Oficio</th><th>Zona</th>
+          <th>Experiencia</th><th>CV</th><th>Estado</th>
+        </tr></thead><tbody>
+          ${cvs.map((c) => `<tr>
+            <td class="mono">${A.esc(c.ref || '—')}</td>
+            <td class="muted">${A.dateFmt(c.created_at)}</td>
+            <td><strong>${A.esc(c.name)}</strong><br>
+              <span class="small muted">${A.esc(c.phone)} · ${A.esc(c.email)}</span></td>
+            <td>${A.esc(c.trade_name || '—')}</td>
+            <td class="muted">${A.esc(c.city || '—')}</td>
+            <td class="muted">${A.esc(((A.data.EXPERIENCE.find((e) => e.id === c.experience)) || {}).name || '—')}</td>
+            <td>${(c.cv_path || c.cv_data)
+              ? `<button class="btn btn-ghost btn-sm" data-cv="${c.id}">${A.icon('download', 14)} Abrir</button>`
+              : '<span class="badge badge-grey">Sin CV</span>'}</td>
+            <td><select class="select" data-cvst="${c.id}" style="height:32px;font-size:12.5px;padding:0 26px 0 8px">
+              ${['nueva', 'revisada', 'entrevista', 'contratada', 'descartada']
+                .map((k) => `<option value="${k}" ${c.status === k ? 'selected' : ''}>${k[0].toUpperCase() + k.slice(1)}</option>`).join('')}
+            </select></td></tr>
+            ${c.message ? `<tr><td></td><td colspan="7" class="small muted" style="padding-top:0">
+              ${A.icon('chat', 12)} ${A.esc(c.message)}
+              ${c.licence ? ' · Carnet B' : ''}${c.own_vehicle ? ' · Vehículo propio' : ''}</td></tr>` : ''}`).join('')}
+        </tbody></table></div>`
+        : `<div class="empty" style="padding:30px 20px">${A.icon('briefcase', 36)}
+            <h3>Todavía no hay candidaturas</h3>
+            <p class="small">Aparecerán aquí en cuanto alguien envíe su currículum desde la app.</p></div>`}
 
       <div class="sec-head"><div class="sec-title">Clientes</div></div>
       <div class="tablewrap">

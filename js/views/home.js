@@ -313,6 +313,18 @@
           <td><span class="badge badge-green">${A.esc(a.resp)}</span></td></tr>`).join('')}</tbody></table>
       </div>
 
+      <div class="card card-p" style="margin-top:16px;border-color:var(--accent)">
+        <div class="between wrap" style="gap:12px">
+          <div class="row" style="gap:12px;align-items:flex-start;min-width:0">
+            <span style="color:var(--accent);flex:none">${A.icon('briefcase', 22)}</span>
+            <div><strong style="font-size:15px">¿Eres del oficio?</strong>
+              <p class="small muted" style="margin-top:3px">Buscamos gente que trabaje bien y cumpla los plazos.
+              Déjanos tu currículum y te tenemos en cuenta en la próxima obra.</p></div>
+          </div>
+          <a class="btn" href="#/empleo">Trabaja con nosotros</a>
+        </div>
+      </div>
+
       <div class="sec-head"><div class="sec-title">Preguntas frecuentes</div></div>
       <div class="stack">
         ${A.data.FAQ.map((f, i) => `<details class="card card-p" ${i === 0 ? 'open' : ''}>

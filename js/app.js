@@ -80,7 +80,8 @@
     { href:'#/catalogo',    key:'nav.catalog' },
     { href:'#/materiales',  key:'nav.materials' },
     { href:'#/render',      key:'nav.render' },
-    { href:'#/empresa',     key:'nav.company' }
+    { href:'#/empresa',     key:'nav.company' },
+    { href:'#/empleo',      key:'nav.jobs' }
   ];
 
   function updateNav(path) {
@@ -164,6 +165,7 @@
       ${item('#/perfil', 'user', A.t('nav.profile'))}
       <div class="drawer-sec">Empresa</div>
       ${item('#/empresa', 'building', A.t('nav.company'))}
+      ${item('#/empleo', 'briefcase', 'Trabaja con nosotros')}
       ${item('#/catalogo', 'image', A.t('nav.catalog'))}
       ${item('#/privacidad', 'lock', A.t('nav.privacy'))}
       ${A.auth.isAdmin() ? `<div class="drawer-sec">Gestión</div>${item('#/admin', 'chart', A.t('nav.admin'))}` : ''}

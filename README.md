@@ -107,6 +107,20 @@ marcados como ejemplo, nunca los reales.
 - 4 variaciones por generación, vista 360° simulada, comparativa antes/después,
   guardado, descarga, compartición y salto directo al presupuesto.
 
+### Bolsa de empleo
+
+- Página **Trabaja con nosotros** con las ofertas abiertas y formulario de
+  candidatura espontánea.
+- 13 oficios, experiencia, tipo de contrato, disponibilidad, carnet y vehículo.
+- **Subida de currículum** (PDF, Word, JPG o PNG, hasta 5 MB). Con Supabase el
+  archivo va al almacén privado `curriculums`; sin backend se guarda en el
+  dispositivo si pesa menos de 1 MB.
+- Consentimiento RGPD específico y conservación de 12 meses, con función SQL de
+  purga automática.
+- En Administración: tabla de candidaturas, apertura del CV con enlace firmado
+  de 5 minutos y estados (nueva, revisada, entrevista, contratada, descartada).
+- Ofertas y promesas al candidato se editan en `js/data/jobs.js`.
+
 ### Cuenta y gestión
 - Registro y acceso, perfil con métricas, mensajería interna con respuesta
   automática, notificaciones push, agenda de citas, pasarela de pago simulada

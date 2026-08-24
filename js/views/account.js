@@ -158,7 +158,8 @@
         ${[['file-text', 'Mis presupuestos', '#/presupuestos'], ['building', 'Mis avalúos', '#/avaluos'],
            ['sparkles', 'Mis renders', '#/renders'], ['calendar', 'Mis citas', '#/citas'],
            ['chat', 'Mensajes', '#/mensajes'], ['card', 'Pagos', '#/pagos'],
-           ['cart', 'Cesta de materiales', '#/cesta'], ['lock', 'Privacidad y RGPD', '#/privacidad']]
+           ['cart', 'Cesta de materiales', '#/cesta'], ['briefcase', 'Trabaja con nosotros', '#/empleo'],
+           ['lock', 'Privacidad y RGPD', '#/privacidad']]
           .map(([ic, l, h]) => `<a class="card card-hover card-p row" href="${h}" style="gap:11px;padding:14px">
             <span style="color:var(--primary)">${A.icon(ic, 19)}</span>
             <span style="font-weight:600;font-size:14px;flex:1">${l}</span>
@@ -482,6 +483,7 @@
       ['Destinatarios', 'Industriales colaboradores estrictamente necesarios para ejecutar la obra, proveedor de alojamiento en la UE, pasarela de pago certificada, asesoría fiscal y administraciones públicas cuando la ley lo exija. No se realizan transferencias internacionales fuera del EEE.'],
       ['Tus derechos', 'Acceso, rectificación, supresión, limitación, portabilidad y oposición. Puedes ejercerlos desde tu perfil (descargar o borrar tus datos) o escribiendo al DPO. También puedes reclamar ante la AEPD (www.aepd.es).'],
       ['Seguridad', 'Cifrado en tránsito (TLS 1.3) y en reposo, control de acceso por roles, registro de accesos y copias de seguridad diarias. Las contraseñas se almacenan con funciones de derivación seguras, nunca en claro.'],
+      ['Candidaturas de empleo', 'Si nos envías tu currículum tratamos tus datos identificativos, de contacto y de trayectoria profesional con la única finalidad de valorar tu candidatura, sobre la base de tu consentimiento y de medidas precontractuales. Conservamos el currículum 12 meses y después lo eliminamos, salvo que nos pidas retirarlo antes escribiendo al DPO. No lo cedemos a terceros ni lo usamos para ninguna otra finalidad.'],
       ['Cookies y almacenamiento local', 'La aplicación usa almacenamiento local del dispositivo para recordar tu sesión, tus preferencias y los borradores de presupuesto. No se emplean cookies publicitarias ni de seguimiento de terceros.']
     ].map(([t, c]) => `<div class="card card-p" style="margin-bottom:10px">
       <strong style="font-size:14.5px">${t}</strong>

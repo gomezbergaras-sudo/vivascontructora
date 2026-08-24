@@ -8,7 +8,7 @@
     es: {
       'nav.home':'Inicio','nav.services':'Servicios','nav.catalog':'Catálogo','nav.materials':'Materiales',
       'nav.profile':'Perfil','nav.quotes':'Presupuestos','nav.valuation':'Avalúos','nav.render':'Render IA',
-      'nav.appointments':'Citas','nav.messages':'Mensajes','nav.admin':'Administración','nav.company':'Empresa',
+      'nav.appointments':'Citas','nav.messages':'Mensajes','nav.admin':'Administración','nav.company':'Empresa','nav.jobs':'Empleo',
       'nav.notifications':'Notificaciones','nav.payments':'Pagos','nav.privacy':'Privacidad y RGPD',
       'common.continue':'Continuar','common.back':'Atrás','common.cancel':'Cancelar','common.save':'Guardar',
       'common.search':'Buscar','common.filter':'Filtrar','common.all':'Todos','common.from':'Desde',
@@ -31,7 +31,7 @@
     en: {
       'nav.home':'Home','nav.services':'Services','nav.catalog':'Portfolio','nav.materials':'Materials',
       'nav.profile':'Profile','nav.quotes':'Quotes','nav.valuation':'Valuations','nav.render':'AI Render',
-      'nav.appointments':'Appointments','nav.messages':'Messages','nav.admin':'Admin','nav.company':'Company',
+      'nav.appointments':'Appointments','nav.messages':'Messages','nav.admin':'Admin','nav.company':'Company','nav.jobs':'Jobs',
       'nav.notifications':'Notifications','nav.payments':'Payments','nav.privacy':'Privacy & GDPR',
       'common.continue':'Continue','common.back':'Back','common.cancel':'Cancel','common.save':'Save',
       'common.search':'Search','common.filter':'Filter','common.all':'All','common.from':'From',

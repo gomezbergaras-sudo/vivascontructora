@@ -46,8 +46,9 @@
   }
 
   A.route('/admin', async () => {
-    const [quotes, users, apps, pays, vals] = await Promise.all([
-      A.db.list('quotes'), A.db.list('users'), A.db.list('appointments'), A.db.list('payments'), A.db.list('valuations')
+    const [quotes, users, apps, pays, vals, cvs] = await Promise.all([
+      A.db.list('quotes'), A.db.list('users'), A.db.list('appointments'),
+      A.db.list('payments'), A.db.list('valuations'), A.db.list('applications')
     ]);
 
     const won = quotes.filter((q) => ['aceptado', 'en_obra', 'finalizado'].indexOf(q.status) !== -1);
@@ -76,6 +77,20 @@
     const STATUS_L = { borrador:'Borrador', enviado:'Enviado', aceptado:'Aceptado', en_obra:'En obra', finalizado:'Finalizado', rechazado:'Rechazado' };
 
     A.onMount(() => {
+      A.$$('[data-cvst]').forEach((sel) => sel.addEventListener('change', async (e) => {
+        await A.db.update('applications', sel.dataset.cvst, { status:e.target.value });
+        A.toast('Candidatura actualizada', 'ok');
+      }));
+      A.$$('[data-cv]').forEach((b) => b.addEventListener('click', async () => {
+        const rec = cvs.find((x) => x.id === b.dataset.cv);
+        b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
+        try {
+          const url = await A.jobs.cvUrl(rec);
+          if (!url) throw new Error('El archivo ya no está disponible');
+          window.open(url, '_blank', 'noopener');
+        } catch (err) { A.toast(err.message, 'err'); }
+        b.disabled = false; b.innerHTML = A.icon('download', 14) + ' Abrir';
+      }));
       A.$$('[data-st]').forEach((s) => s.addEventListener('change', async (e) => {
         await A.db.update('quotes', s.dataset.st, { status:e.target.value });
         A.toast('Estado actualizado', 'ok');
@@ -127,6 +142,8 @@
         ${kpi(String(users.length), 'Clientes', 'registrados')}
         ${kpi(String(apps.filter((a) => a.status !== 'cancelada').length), 'Citas activas', 'visitas y obra')}
         ${kpi(String(vals.length), 'Avalúos', 'informes emitidos')}
+        ${kpi(String(cvs.filter((c) => c.status === 'nueva').length), 'Candidaturas',
+             cvs.length + ' en total', cvs.some((c) => c.status === 'nueva') ? 'var(--accent)' : '')}
       </div>
 
       <div class="grid g2" style="gap:12px;margin-top:14px">
@@ -191,6 +208,37 @@
           <p class="small muted" style="margin-top:8px">Edita las tarifas en <code>js/data/services.js</code> o en la tabla <code>services</code> de Supabase.</p>
         </div>
       </div>
+
+      <div class="sec-head"><div><div class="sec-title">Bolsa de empleo</div>
+        <div class="sec-sub">${cvs.length} candidaturas recibidas</div></div>
+        <a class="link" href="#/empleo">Ver el formulario ${A.icon('chev', 14)}</a></div>
+      ${cvs.length ? `<div class="tablewrap">
+        <table><thead><tr>
+          <th>Ref.</th><th>Fecha</th><th>Candidato</th><th>Oficio</th><th>Zona</th>
+          <th>Experiencia</th><th>CV</th><th>Estado</th>
+        </tr></thead><tbody>
+          ${cvs.map((c) => `<tr>
+            <td class="mono">${A.esc(c.ref || '—')}</td>
+            <td class="muted">${A.dateFmt(c.created_at)}</td>
+            <td><strong>${A.esc(c.name)}</strong><br>
+              <span class="small muted">${A.esc(c.phone)} · ${A.esc(c.email)}</span></td>
+            <td>${A.esc(c.trade_name || '—')}</td>
+            <td class="muted">${A.esc(c.city || '—')}</td>
+            <td class="muted">${A.esc(((A.data.EXPERIENCE.find((e) => e.id === c.experience)) || {}).name || '—')}</td>
+            <td>${(c.cv_path || c.cv_data)
+              ? `<button class="btn btn-ghost btn-sm" data-cv="${c.id}">${A.icon('download', 14)} Abrir</button>`
+              : '<span class="badge badge-grey">Sin CV</span>'}</td>
+            <td><select class="select" data-cvst="${c.id}" style="height:32px;font-size:12.5px;padding:0 26px 0 8px">
+              ${['nueva', 'revisada', 'entrevista', 'contratada', 'descartada']
+                .map((k) => `<option value="${k}" ${c.status === k ? 'selected' : ''}>${k[0].toUpperCase() + k.slice(1)}</option>`).join('')}
+            </select></td></tr>
+            ${c.message ? `<tr><td></td><td colspan="7" class="small muted" style="padding-top:0">
+              ${A.icon('chat', 12)} ${A.esc(c.message)}
+              ${c.licence ? ' · Carnet B' : ''}${c.own_vehicle ? ' · Vehículo propio' : ''}</td></tr>` : ''}`).join('')}
+        </tbody></table></div>`
+        : `<div class="empty" style="padding:30px 20px">${A.icon('briefcase', 36)}
+            <h3>Todavía no hay candidaturas</h3>
+            <p class="small">Aparecerán aquí en cuanto alguien envíe su currículum desde la app.</p></div>`}
 
       <div class="sec-head"><div class="sec-title">Clientes</div></div>
       <div class="tablewrap">
