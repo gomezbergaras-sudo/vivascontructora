@@ -53,6 +53,14 @@ body { background: radial-gradient(circle at 85% -6%, var(--glow), transparent 4
 .main { padding-bottom:calc(var(--bottom-h) + env(safe-area-inset-bottom,0px) + 36px); }
 .toasts { bottom:calc(var(--bottom-h) + 36px); }
 .composer { bottom:calc(var(--bottom-h) + env(safe-area-inset-bottom,0px) + 20px); }
+
+/* Agenda administrativa */
+.ag-week { display:grid; gap:12px; }
+@media (min-width:900px){ .ag-week { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.ag-day { border:1px solid var(--border); border-radius:18px; padding:12px 14px; background:var(--surface); }
+.ag-day.is-today { border-color:var(--primary); box-shadow:0 0 0 1px var(--primary) inset; }
+.ag-day.is-past { opacity:.7; }
+.ag-card { border-radius:16px; }
 </style></head><body>
 <title>Vivas CR · Construcción y Reformas</title>
 <style>
@@ -3298,7 +3306,7 @@ window.App = window.App || {};
       ${item('#/empresa', 'building', A.t('nav.company'))}
       ${item('#/catalogo', 'image', A.t('nav.catalog'))}
       ${item('#/privacidad', 'lock', A.t('nav.privacy'))}
-      ${A.auth.isAdmin() ? `<div class="drawer-sec">Gestión</div>${item('#/admin', 'chart', A.t('nav.admin'))}` : ''}
+      ${A.auth.isAdmin() ? `<div class="drawer-sec">Gestión</div>${item('#/admin', 'chart', A.t('nav.admin'))}${item('#/admin/agenda', 'calendar', 'Agenda de visitas')}` : ''}
       ${u ? `<div style="padding:14px 13px"><button class="btn btn-ghost btn-block" id="btn-logout">
               ${A.icon('logout', 18)} ${A.esc(A.t('auth.logout'))}</button></div>` : ''}
       <div style="padding:16px 13px" class="small muted">
@@ -3453,6 +3461,9 @@ window.App = window.App || {};
           .map(([ic, t, href]) => `<a href="${href}"><div class="qi">${A.icon(ic, 26)}</div>${t}</a>`).join('')}
       </div>
 
+      ${A.auth.isAdmin() ? `<a class="obra-card" href="#/admin/agenda" style="margin-top:14px;background:linear-gradient(135deg,#063C6B,#0076D9)">
+        <div class="between"><span class="k">Perfil administrativo</span><span class="pill">${A.icon('calendar', 12)} Agenda</span></div>
+        <h2>${en ? 'Visits schedule and requests' : 'Agenda de visitas y solicitudes'}</h2></a>` : ''}
       <div class="feat">
         <a href="#/render"><div class="fi">${A.icon('sparkles', 22)}</div><b>Render IA</b><span>${en ? 'Upload a photo and preview your renovation' : 'Sube una foto y visualiza tu reforma'}</span></a>
         <a href="#/presupuesto"><div class="fi">${A.icon('file-text', 22)}</div><b>Presupuesto</b><span>${en ? 'Quote in 3 steps' : 'Cotización en 3 pasos'}</span></a>
@@ -5504,21 +5515,30 @@ window.App = window.App || {};
       <div class="gf">
         <div class="field"><label class="label">Fecha</label><input class="input" id="f-date" type="date" value="${today}"></div>
         <div class="field"><label class="label">Hora</label>
-          <select class="select" id="f-time">
-            ${['08:00','09:00','10:00','10:30','11:00','12:00','13:00','16:00','17:00','18:00'].map((h) => `<option>${h}</option>`).join('')}
-          </select></div>
+          <select class="select" id="f-time"></select></div>
       </div>
       <div class="field"><label class="label">Dirección</label><input class="input" id="f-addr" placeholder="Calle, número, población"></div>
       <div class="field"><label class="label">Notas</label><textarea class="textarea" id="f-notes" placeholder="Accesos, horarios, detalles a tener en cuenta…"></textarea></div>
       <button class="btn btn-block" id="f-save">Reservar cita</button>`, { title:'Nueva cita' });
+    const fillHours = async () => {
+      const d = w.querySelector('#f-date').value;
+      const busy = A.agenda.taken(await A.db.list('appointments'), d);
+      w.querySelector('#f-time').innerHTML = A.agenda.hours().map((h) => `<option value="${h}" ${busy.indexOf(h) !== -1 ? 'disabled' : ''}>${h}${busy.indexOf(h) !== -1 ? ' · no disponible' : ''}</option>`).join('');
+      const free = w.querySelector('#f-time option:not([disabled])'); if (free) free.selected = true;
+    };
+    fillHours(); w.querySelector('#f-date').addEventListener('change', fillHours);
     w.querySelector('#f-save').addEventListener('click', async () => {
       const t = w.querySelector('#f-title').value.trim();
       if (!t) { A.toast('Indica el motivo de la cita', 'err'); return; }
       await A.db.insert('appointments', {
         user_id:A.state.user ? A.state.user.id : 'anon', type:w.querySelector('#f-type').value,
         title:t, date:w.querySelector('#f-date').value, time:w.querySelector('#f-time').value,
-        address:w.querySelector('#f-addr').value, notes:w.querySelector('#f-notes').value, status:'pendiente'
+        address:w.querySelector('#f-addr').value, notes:w.querySelector('#f-notes').value, status:'pendiente',
+        client_name:A.state.user ? A.state.user.name : '', client_phone:A.state.user ? (A.state.user.phone || '') : '', duration:60
       });
+      for (const adm of (await A.db.list('users', { role:'admin' }))) {
+        await A.db.insert('notifications', { user_id:adm.id, title:'Nueva solicitud de cita', body:`${t} · ${A.dateFmt(w.querySelector('#f-date').value)} ${w.querySelector('#f-time').value}`, icon:'calendar', link:'#/admin/agenda', read:false });
+      }
       await A.notify('Cita solicitada', `${t} · ${A.dateFmt(w.querySelector('#f-date').value)}`, 'calendar', '#/citas');
       A.closeSheet(); A.toast('Cita solicitada. Te confirmamos en menos de 24 h.', 'ok'); A.render(); A.refreshBadge();
     });
@@ -5857,6 +5877,7 @@ window.App = window.App || {};
             ? '<button class="btn btn-ghost btn-sm" id="ad-demo-off" style="color:var(--red)">' + A.icon('trash', 15) + ' Borrar ejemplos</button>'
             : '<button class="btn btn-ghost btn-sm" id="ad-demo-on">' + A.icon('sparkles', 15) + ' Cargar datos de ejemplo</button>'}
           <button class="btn btn-ghost btn-sm" id="ad-export">${A.icon('download', 15)} Exportar CSV</button>
+          <a class="btn btn-sm" href="#/admin/agenda">${A.icon('calendar', 15)} Agenda</a>
         </div>
       </div>
 
@@ -5913,7 +5934,7 @@ window.App = window.App || {};
 
       <div class="grid g2" style="gap:12px;margin-top:16px">
         <div class="card card-p">
-          <strong style="font-size:15px">Agenda</strong>
+          <div class="between"><strong style="font-size:15px">Agenda</strong><a class="link" href="#/admin/agenda">Gestionar ${A.icon('chev', 14)}</a></div>
           <div style="margin-top:10px">
             ${apps.length ? apps.slice(0, 6).map((a) => `<div class="line">
               <span><strong class="small">${A.esc(a.title)}</strong><br>
@@ -5946,6 +5967,321 @@ window.App = window.App || {};
       <div style="height:26px"></div>
     </div>`;
   }, { title:'Administración', admin:true });
+})(window.App);
+
+
+/* ===== js/views/agenda-admin.js ===== */
+/* ============================================================
+   Perfil administrativo — Agenda de visitas técnicas y obra
+   · Vista semanal con huecos libres
+   · Solicitudes pendientes de confirmar
+   · Alta / edición / reprogramación / cancelación
+   · Asignación de técnico, vínculo con presupuesto
+   · Aviso al cliente (notificación in-app + WhatsApp)
+   · Exportar a calendario (.ics) y CSV
+   ============================================================ */
+(function (A) {
+  'use strict';
+
+  const HKEY = 'vivas.agenda.hours';
+  const TKEY = 'vivas.agenda.techs';
+  const DEFAULT_HOURS = ['08:00','09:00','10:00','11:00','12:00','13:00','16:00','17:00','18:00'];
+  const TYPES = { visita:'Visita técnica', obra:'Seguimiento de obra', videollamada:'Videollamada', entrega:'Entrega de obra' };
+  const STATUS = { pendiente:'Pendiente', confirmada:'Confirmada', realizada:'Realizada', cancelada:'Cancelada' };
+  const BADGE = { pendiente:'badge-amber', confirmada:'badge-green', realizada:'badge-grey', cancelada:'badge-red' };
+  const DAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+  const hours = () => A.store.get(HKEY, DEFAULT_HOURS);
+  const techs = () => A.store.get(TKEY, []);
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  function monday(d) { const x = new Date(d); const day = (x.getDay() + 6) % 7; x.setDate(x.getDate() - day); x.setHours(12, 0, 0, 0); return x; }
+  const todayIso = () => iso(new Date());
+
+  /* Huecos ocupados de un día (no cuenta canceladas) */
+  function taken(rows, date, exceptId) {
+    return rows.filter((r) => r.date === date && r.status !== 'cancelada' && r.id !== exceptId).map((r) => r.time);
+  }
+
+  /* Aviso al cliente vinculado a la cita */
+  async function notifyClient(a, title, body) {
+    if (!a.user_id || a.user_id === 'anon') return;
+    await A.db.insert('notifications', { user_id:a.user_id, title, body, icon:'calendar', link:'#/citas', read:false });
+  }
+  function waLink(phone, text) {
+    const p = String(phone || '').replace(/[^\d]/g, '');
+    if (!p) return '';
+    return 'https://wa.me/' + (p.length === 9 ? '34' + p : p) + '?text=' + encodeURIComponent(text);
+  }
+  function waText(a) {
+    return `Hola ${a.client_name ? a.client_name.split(' ')[0] : ''}, le confirmamos su ${TYPES[a.type] || 'cita'} con ${A.data.COMPANY.name}: ${A.dateFmt(a.date)} a las ${a.time}${a.address ? ' en ' + a.address : ''}. ${a.tech ? 'Le atenderá ' + a.tech + '. ' : ''}Gracias.`;
+  }
+
+  /* ---------- Formulario de alta / edición ---------- */
+  async function openAdminForm(a, allRows, onDone) {
+    a = a || {};
+    const users = (await A.db.list('users')).filter((u) => u.role !== 'admin');
+    const quotes = await A.db.list('quotes');
+    const date0 = a.date || iso(addDays(new Date(), 1));
+    const opt = (v, l, sel) => `<option value="${A.esc(v)}" ${sel ? 'selected' : ''}>${A.esc(l)}</option>`;
+
+    const w = A.sheet(`
+      <div class="gf">
+        <div class="field"><label class="label">Tipo</label>
+          <select class="select" id="g-type">${Object.keys(TYPES).map((k) => opt(k, TYPES[k], a.type === k)).join('')}</select></div>
+        <div class="field"><label class="label">Estado</label>
+          <select class="select" id="g-status">${Object.keys(STATUS).map((k) => opt(k, STATUS[k], (a.status || 'confirmada') === k)).join('')}</select></div>
+      </div>
+      <div class="field"><label class="label">Motivo</label>
+        <input class="input" id="g-title" value="${A.esc(a.title || '')}" placeholder="Ej.: medición de cocina"></div>
+      <div class="field"><label class="label">Cliente registrado</label>
+        <select class="select" id="g-user">
+          <option value="anon">— Sin cuenta / cliente manual —</option>
+          ${users.map((u) => opt(u.id, u.name + (u.phone ? ' · ' + u.phone : ''), a.user_id === u.id)).join('')}
+        </select></div>
+      <div class="gf">
+        <div class="field"><label class="label">Nombre del cliente</label>
+          <input class="input" id="g-cname" value="${A.esc(a.client_name || '')}" placeholder="Nombre y apellidos"></div>
+        <div class="field"><label class="label">Teléfono</label>
+          <input class="input" id="g-cphone" value="${A.esc(a.client_phone || '')}" placeholder="6XX XXX XXX" inputmode="tel"></div>
+      </div>
+      <div class="field"><label class="label">Presupuesto vinculado</label>
+        <select class="select" id="g-quote">
+          <option value="">— Ninguno —</option>
+          ${quotes.map((q) => opt(q.id, q.ref + ' · ' + q.service_name + ' · ' + A.eur(q.total), a.quote_id === q.id)).join('')}
+        </select></div>
+      <div class="gf">
+        <div class="field"><label class="label">Fecha</label><input class="input" id="g-date" type="date" value="${date0}"></div>
+        <div class="field"><label class="label">Hora</label><select class="select" id="g-time"></select></div>
+      </div>
+      <div class="gf">
+        <div class="field"><label class="label">Duración</label>
+          <select class="select" id="g-dur">${[30,45,60,90,120,180].map((m) => opt(m, m + ' min', (a.duration || 60) === m)).join('')}</select></div>
+        <div class="field"><label class="label">Técnico asignado</label>
+          <input class="input" id="g-tech" list="g-techs" value="${A.esc(a.tech || '')}" placeholder="Nombre">
+          <datalist id="g-techs">${techs().map((t) => `<option value="${A.esc(t)}">`).join('')}</datalist></div>
+      </div>
+      <div class="field"><label class="label">Dirección</label>
+        <input class="input" id="g-addr" value="${A.esc(a.address || '')}" placeholder="Calle, número, población"></div>
+      <div class="field"><label class="label">Notas para el cliente</label>
+        <textarea class="textarea" id="g-notes" style="min-height:70px">${A.esc(a.notes || '')}</textarea></div>
+      <div class="field"><label class="label">Notas internas (solo administración)</label>
+        <textarea class="textarea" id="g-inotes" style="min-height:70px">${A.esc(a.internal_notes || '')}</textarea></div>
+      <label class="row small" style="gap:8px;margin-bottom:14px;cursor:pointer">
+        <input type="checkbox" id="g-notify" checked style="width:18px;height:18px"> Avisar al cliente en la app al guardar</label>
+      <button class="btn btn-block" id="g-save">${a.id ? 'Guardar cambios' : 'Crear cita'}</button>
+    `, { title: a.id ? 'Editar cita' : 'Nueva cita' });
+
+    const $ = (s) => w.querySelector(s);
+    function fillHours() {
+      const d = $('#g-date').value, busy = taken(allRows, d, a.id);
+      const cur = a.time && $('#g-time').value === '' ? a.time : $('#g-time').value;
+      $('#g-time').innerHTML = hours().map((h) => `<option value="${h}" ${busy.indexOf(h) !== -1 ? 'disabled' : ''} ${cur === h ? 'selected' : ''}>${h}${busy.indexOf(h) !== -1 ? ' · ocupada' : ''}</option>`).join('');
+      if (!$('#g-time').value) { const free = $('#g-time').querySelector('option:not([disabled])'); if (free) free.selected = true; }
+    }
+    fillHours();
+    $('#g-date').addEventListener('change', fillHours);
+    $('#g-user').addEventListener('change', () => {
+      const u = users.find((x) => x.id === $('#g-user').value);
+      if (u) { $('#g-cname').value = u.name || ''; $('#g-cphone').value = u.phone || ''; if (!$('#g-addr').value && u.province) $('#g-addr').value = u.province; }
+    });
+    $('#g-quote').addEventListener('change', () => {
+      const q = quotes.find((x) => x.id === $('#g-quote').value);
+      if (q) {
+        if (!$('#g-title').value) $('#g-title').value = (TYPES[$('#g-type').value] || 'Visita') + ' — ' + q.service_name;
+        if (!$('#g-cname').value) $('#g-cname').value = q.client_name || '';
+        if (!$('#g-cphone').value) $('#g-cphone').value = q.client_phone || '';
+        if (!$('#g-addr').value) $('#g-addr').value = q.client_address || '';
+        if (q.user_id && q.user_id !== 'anon' && $('#g-user').value === 'anon') { $('#g-user').value = q.user_id; }
+      }
+    });
+
+    $('#g-save').addEventListener('click', async () => {
+      const rec = {
+        type:$('#g-type').value, status:$('#g-status').value, title:$('#g-title').value.trim(),
+        user_id:$('#g-user').value, client_name:$('#g-cname').value.trim(), client_phone:$('#g-cphone').value.trim(),
+        quote_id:$('#g-quote').value || '', date:$('#g-date').value, time:$('#g-time').value,
+        duration:Number($('#g-dur').value), tech:$('#g-tech').value.trim(), address:$('#g-addr').value.trim(),
+        notes:$('#g-notes').value.trim(), internal_notes:$('#g-inotes').value.trim()
+      };
+      if (!rec.title) { A.toast('Indica el motivo', 'err'); return; }
+      if (!rec.date || !rec.time) { A.toast('Indica fecha y hora', 'err'); return; }
+      if (taken(allRows, rec.date, a.id).indexOf(rec.time) !== -1) { A.toast('Esa hora ya está ocupada', 'err'); return; }
+      if (rec.tech && techs().indexOf(rec.tech) === -1) A.store.set(TKEY, techs().concat([rec.tech]));
+      let saved;
+      if (a.id) { await A.db.update('appointments', a.id, rec); saved = Object.assign({}, a, rec); }
+      else { saved = await A.db.insert('appointments', rec); }
+      if ($('#g-notify').checked) {
+        const changed = a.id && (a.date !== rec.date || a.time !== rec.time);
+        await notifyClient(saved, changed ? 'Cita reprogramada' : (rec.status === 'confirmada' ? 'Cita confirmada' : 'Cita actualizada'),
+          `${rec.title} · ${A.dateFmt(rec.date)} a las ${rec.time}${rec.tech ? ' · ' + rec.tech : ''}`);
+      }
+      A.closeSheet(); A.toast(a.id ? 'Cita guardada' : 'Cita creada', 'ok');
+      if (onDone) onDone(saved);
+    });
+  }
+
+  /* ---------- Horario de visitas ---------- */
+  function openHoursForm(onDone) {
+    const all = []; for (let h = 7; h <= 20; h++) { all.push(String(h).padStart(2, '0') + ':00'); all.push(String(h).padStart(2, '0') + ':30'); }
+    const cur = hours();
+    const w = A.sheet(`
+      <p class="small muted" style="margin-bottom:10px">Marca las horas en las que se pueden reservar visitas. Los clientes solo verán estas horas.</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:46vh;overflow:auto">
+        ${all.map((h) => `<label class="opt ${cur.indexOf(h) !== -1 ? 'sel' : ''}" style="padding:9px;text-align:center;cursor:pointer">
+          <input type="checkbox" value="${h}" ${cur.indexOf(h) !== -1 ? 'checked' : ''} style="display:none"><span class="opt-t">${h}</span></label>`).join('')}
+      </div>
+      <div class="field" style="margin-top:14px"><label class="label">Técnicos (uno por línea)</label>
+        <textarea class="textarea" id="h-techs" style="min-height:70px">${A.esc(techs().join('\n'))}</textarea></div>
+      <button class="btn btn-block" id="h-save" style="margin-top:4px">Guardar horario</button>
+    `, { title:'Horario y equipo' });
+    w.querySelectorAll('label.opt').forEach((l) => l.addEventListener('click', () => setTimeout(() => l.classList.toggle('sel', l.querySelector('input').checked), 0)));
+    w.querySelector('#h-save').addEventListener('click', () => {
+      const sel = Array.from(w.querySelectorAll('input[type=checkbox]:checked')).map((i) => i.value).sort();
+      if (!sel.length) { A.toast('Selecciona al menos una hora', 'err'); return; }
+      A.store.set(HKEY, sel);
+      A.store.set(TKEY, w.querySelector('#h-techs').value.split('\n').map((s) => s.trim()).filter(Boolean));
+      A.closeSheet(); A.toast('Horario guardado', 'ok'); if (onDone) onDone();
+    });
+  }
+
+  /* ---------- Exportaciones ---------- */
+  function toICS(rows) {
+    const esc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+    const stamp = (d, t, plus) => { const x = new Date(d + 'T' + t + ':00'); x.setMinutes(x.getMinutes() + (plus || 0)); return x.toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z'; };
+    const ev = rows.filter((r) => r.status !== 'cancelada' && r.date && r.time).map((r) => [
+      'BEGIN:VEVENT', 'UID:' + r.id + '@vivascr', 'DTSTAMP:' + stamp(todayIso(), '00:00'),
+      'DTSTART:' + stamp(r.date, r.time), 'DTEND:' + stamp(r.date, r.time, r.duration || 60),
+      'SUMMARY:' + esc((TYPES[r.type] || 'Cita') + ' — ' + r.title + (r.client_name ? ' (' + r.client_name + ')' : '')),
+      'LOCATION:' + esc(r.address), 'DESCRIPTION:' + esc([r.client_phone, r.tech ? 'Técnico: ' + r.tech : '', r.notes, r.internal_notes].filter(Boolean).join(' · ')),
+      'END:VEVENT'].join('\r\n'));
+    return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Vivas CR//Agenda//ES', 'CALSCALE:GREGORIAN'].concat(ev, ['END:VCALENDAR']).join('\r\n');
+  }
+
+  /* ---------- Tarjeta de cita ---------- */
+  function card(a, compact) {
+    const wa = waLink(a.client_phone, waText(a));
+    return `<div class="card card-p ag-card" data-id="${a.id}" style="padding:12px 14px">
+      <div class="between" style="gap:8px;align-items:flex-start">
+        <div style="min-width:0;flex:1">
+          <div class="row wrap" style="gap:6px;margin-bottom:5px">
+            <span class="badge ${BADGE[a.status] || 'badge-grey'}">${STATUS[a.status] || a.status}</span>
+            <span class="badge badge-grey">${TYPES[a.type] || a.type}</span>
+            ${a.tech ? `<span class="badge badge-navy">${A.icon('user', 11)} ${A.esc(a.tech)}</span>` : ''}
+          </div>
+          <div style="font-weight:700;font-size:15px;line-height:1.3">${A.esc(a.title)}</div>
+          <div class="small muted" style="margin-top:3px">${A.icon('clock', 12)} ${compact ? '' : A.dateFmt(a.date) + ' · '}${A.esc(a.time)}${a.duration ? ' · ' + a.duration + ' min' : ''}</div>
+          ${a.client_name || a.client_phone ? `<div class="small muted">${A.icon('user', 12)} ${A.esc(a.client_name || '')}${a.client_phone ? ' · ' + A.esc(a.client_phone) : ''}</div>` : ''}
+          ${a.address ? `<div class="small muted">${A.icon('pin', 12)} ${A.esc(a.address)}</div>` : ''}
+          ${a.internal_notes ? `<div class="small" style="margin-top:6px;padding:6px 9px;border-radius:10px;background:var(--amber-soft);color:var(--amber-dark)">${A.icon('lock', 11)} ${A.esc(a.internal_notes)}</div>` : ''}
+        </div>
+        <button class="iconbtn" data-edit="${a.id}" aria-label="Editar" style="flex:none">${A.icon('edit', 17)}</button>
+      </div>
+      <div class="row wrap" style="gap:6px;margin-top:10px">
+        ${a.status === 'pendiente' ? `<button class="btn btn-sm" data-act="confirmada" data-id="${a.id}">${A.icon('check', 14)} Confirmar</button>` : ''}
+        ${a.status === 'confirmada' ? `<button class="btn btn-sm btn-soft" data-act="realizada" data-id="${a.id}">${A.icon('check-circle', 14)} Realizada</button>` : ''}
+        ${a.status !== 'cancelada' && a.status !== 'realizada' ? `<button class="btn btn-ghost btn-sm" data-move="${a.id}">${A.icon('calendar', 14)} Reprogramar</button>` : ''}
+        ${a.status !== 'cancelada' ? `<button class="btn btn-ghost btn-sm" data-act="cancelada" data-id="${a.id}" style="color:var(--red)">Cancelar</button>` : ''}
+        ${wa ? `<a class="btn btn-wa btn-sm" href="${wa}" target="_blank" rel="noopener">${A.icon('whatsapp', 14)} WhatsApp</a>` : ''}
+        ${a.client_phone ? `<a class="btn btn-ghost btn-sm" href="tel:${A.esc(String(a.client_phone).replace(/\s/g, ''))}">${A.icon('phone', 14)}</a>` : ''}
+        ${a.quote_id ? `<a class="btn btn-ghost btn-sm" href="#/presupuesto-detalle/${A.esc(a.quote_id)}">${A.icon('file-text', 14)} Presupuesto</a>` : ''}
+      </div>
+    </div>`;
+  }
+
+  /* ---------- Vista ---------- */
+  A.route('/admin/agenda', async (params, q) => {
+    const all = await A.db.list('appointments');
+    const start = q.w ? new Date(q.w + 'T12:00:00') : monday(new Date());
+    const filter = q.f || 'activas';
+    const days = []; for (let i = 0; i < 7; i++) days.push(addDays(start, i));
+    const inWeek = (a) => a.date >= iso(days[0]) && a.date <= iso(days[6]);
+    const pass = (a) => filter === 'todas' ? true : filter === 'activas' ? (a.status === 'pendiente' || a.status === 'confirmada') : a.status === filter;
+    const pending = all.filter((a) => a.status === 'pendiente').sort((x, y) => (x.date + x.time).localeCompare(y.date + y.time));
+    const week = all.filter(inWeek).filter(pass).sort((x, y) => (x.date + x.time).localeCompare(y.date + y.time));
+    const today = todayIso();
+    const link = (w, f) => `#/admin/agenda?w=${iso(w)}&f=${f || filter}`;
+    const H = hours();
+
+    A.onMount(() => {
+      const reload = () => A.render();
+      A.$('#ag-new').addEventListener('click', () => openAdminForm({ date: iso(days[0]) < today ? today : iso(days[0]) }, all, reload));
+      A.$('#ag-hours').addEventListener('click', () => openHoursForm(reload));
+      A.$('#ag-ics').addEventListener('click', () => { A.download('vivascr-agenda.ics', new Blob([toICS(all)], { type:'text/calendar' })); A.toast('Calendario exportado (.ics)', 'ok'); });
+      A.$('#ag-csv').addEventListener('click', () => {
+        const head = 'Fecha;Hora;Tipo;Estado;Motivo;Cliente;Teléfono;Dirección;Técnico;Presupuesto\n';
+        const rows = all.slice().sort((x, y) => (x.date + x.time).localeCompare(y.date + y.time)).map((a) => [a.date, a.time, TYPES[a.type] || a.type, STATUS[a.status] || a.status, a.title, a.client_name || '', a.client_phone || '', a.address || '', a.tech || '', a.quote_id || ''].map((v) => String(v).replace(/;/g, ',')).join(';')).join('\n');
+        A.download('vivascr-agenda.csv', new Blob(['\ufeff' + head + rows], { type:'text/csv;charset=utf-8' })); A.toast('CSV descargado', 'ok');
+      });
+      A.$$('[data-edit]').forEach((b) => b.addEventListener('click', () => openAdminForm(all.find((x) => x.id === b.dataset.edit), all, reload)));
+      A.$$('[data-move]').forEach((b) => b.addEventListener('click', () => openAdminForm(all.find((x) => x.id === b.dataset.move), all, reload)));
+      A.$$('[data-slot]').forEach((b) => b.addEventListener('click', () => openAdminForm({ date:b.dataset.slot, time:b.dataset.time }, all, reload)));
+      A.$$('[data-act]').forEach((b) => b.addEventListener('click', async () => {
+        const a = all.find((x) => x.id === b.dataset.id); const st = b.dataset.act;
+        if (st === 'cancelada' && !(await A.confirm('Cancelar cita', `¿Cancelar "${a.title}" del ${A.dateFmt(a.date)} a las ${a.time}?`, 'Cancelar cita'))) return;
+        await A.db.update('appointments', a.id, { status:st });
+        await notifyClient(a, st === 'confirmada' ? 'Cita confirmada' : st === 'cancelada' ? 'Cita cancelada' : 'Visita realizada',
+          `${a.title} · ${A.dateFmt(a.date)} a las ${a.time}`);
+        A.toast(st === 'confirmada' ? 'Cita confirmada y cliente avisado' : 'Estado actualizado', 'ok'); reload();
+      }));
+    });
+
+    const chip = (f, l) => `<a class="chip ${filter === f ? 'sel' : ''}" href="${link(start, f)}">${l}</a>`;
+    const kpiWeek = all.filter(inWeek).filter((a) => a.status !== 'cancelada').length;
+    const freeWeek = days.reduce((s, d) => s + (d.getDay() === 0 ? 0 : H.length - taken(all, iso(d)).length), 0);
+
+    return `<div class="container" style="padding-top:18px;max-width:980px">
+      <div class="between wrap" style="gap:10px;margin-bottom:14px">
+        <div><div class="sec-title">Agenda de visitas</div>
+          <div class="sec-sub">Perfil administrativo · ${kpiWeek} citas esta semana · ${freeWeek} huecos libres</div></div>
+        <div class="row wrap" style="gap:8px">
+          <a class="btn btn-ghost btn-sm" href="#/admin">${A.icon('chart', 15)} Panel</a>
+          <button class="btn btn-ghost btn-sm" id="ag-hours">${A.icon('settings', 15)} Horario</button>
+          <button class="btn btn-ghost btn-sm" id="ag-ics">${A.icon('calendar', 15)} .ics</button>
+          <button class="btn btn-ghost btn-sm" id="ag-csv">${A.icon('download', 15)} CSV</button>
+          <button class="btn btn-sm" id="ag-new">${A.icon('plus', 16)} Nueva cita</button>
+        </div>
+      </div>
+
+      ${pending.length ? `<div class="card card-p" style="border-color:var(--amber);margin-bottom:16px">
+        <div class="between" style="margin-bottom:8px"><strong>${A.icon('alert', 16)} ${pending.length} solicitud${pending.length > 1 ? 'es' : ''} por confirmar</strong>
+          <span class="small muted">Pedidas por clientes desde la app</span></div>
+        <div class="stack" style="gap:8px">${pending.slice(0, 5).map((a) => card(a)).join('')}</div>
+      </div>` : ''}
+
+      <div class="between" style="gap:8px;margin-bottom:10px">
+        <a class="iconbtn" href="${link(addDays(start, -7))}" aria-label="Semana anterior">${A.icon('back', 18)}</a>
+        <div class="center"><strong>${days[0].toLocaleDateString('es-ES', { day:'numeric', month:'short' })} – ${days[6].toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })}</strong>
+          <div class="small"><a class="link" href="${link(monday(new Date()))}">Ir a hoy</a></div></div>
+        <a class="iconbtn" href="${link(addDays(start, 7))}" aria-label="Semana siguiente" style="transform:scaleX(-1)">${A.icon('back', 18)}</a>
+      </div>
+      <div class="chips" style="margin-bottom:6px">
+        ${chip('activas', 'Activas')}${chip('pendiente', 'Pendientes')}${chip('confirmada', 'Confirmadas')}${chip('realizada', 'Realizadas')}${chip('cancelada', 'Canceladas')}${chip('todas', 'Todas')}
+      </div>
+
+      <div class="ag-week">
+        ${days.map((d) => {
+          const ds = iso(d); const rows = week.filter((a) => a.date === ds); const busy = taken(all, ds);
+          const free = d.getDay() === 0 ? [] : H.filter((h) => busy.indexOf(h) === -1);
+          const past = ds < today;
+          return `<section class="ag-day ${ds === today ? 'is-today' : ''} ${past ? 'is-past' : ''}">
+            <header class="between" style="margin-bottom:8px">
+              <div><strong>${DAYS[(d.getDay() + 6) % 7]} ${d.getDate()}</strong>${ds === today ? ' <span class="badge badge-navy">Hoy</span>' : ''}</div>
+              <span class="small muted">${rows.length ? rows.length + ' cita' + (rows.length > 1 ? 's' : '') : (d.getDay() === 0 ? 'Domingo' : 'Libre')}</span>
+            </header>
+            ${rows.length ? `<div class="stack" style="gap:8px">${rows.map((a) => card(a, true)).join('')}</div>` : ''}
+            ${!past && free.length ? `<div class="row wrap" style="gap:6px;margin-top:${rows.length ? 10 : 0}px">
+              ${free.map((h) => `<button class="chip" data-slot="${ds}" data-time="${h}" style="padding:5px 10px;font-size:12px">+ ${h}</button>`).join('')}
+            </div>` : ''}
+          </section>`;
+        }).join('')}
+      </div>
+      <div style="height:26px"></div>
+    </div>`;
+  }, { title:'Agenda', admin:true });
+
+  /* API para otras vistas (formulario del cliente) */
+  A.agenda = { hours, taken, TYPES, STATUS };
 })(window.App);
 
 </script>
